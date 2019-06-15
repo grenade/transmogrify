@@ -4,7 +4,7 @@ version = "0.0.1"
 authors = [ "rob thijssen <rthijssen@gmail.com>" ]
 
 [dependencies]
-#chrono = { version = "0.4", features = ["serde"] }
+chrono = { version = "^0.4", features = ["serde"] }
 restson = "^0.5"
 serde = "^1.0"
 serde_derive = "^1.0"
