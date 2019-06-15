@@ -13,6 +13,7 @@ mod github;
 // RUST_BACKTRACE=1 cargo run -- grenade
 fn main() {
   let mut github_api = RestClient::new(github::API_URL).unwrap();
-  let github_activity: github::Activity = github_api.get(env::args().nth(1).unwrap()).unwrap();
+  let query = vec![("page", "2")];
+  let github_activity: github::Activity = github_api.get_with(env::args().nth(1).unwrap(), &query).unwrap();
   println!("{:?}", github_activity);
 }
