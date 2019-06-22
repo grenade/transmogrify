@@ -1,6 +1,4 @@
 extern crate chrono;
-#[macro_use]
-extern crate lazy_static;
 extern crate regex;
 extern crate reqwest;
 extern crate restson;
@@ -10,7 +8,10 @@ extern crate serde_json;
 extern crate serde;
 extern crate yaml_rust;
 
-use restson::{RestClient};
+use restson::{
+  RestClient,
+  RestPath
+};
 use std::{
   fs,
   io::prelude::*
@@ -27,13 +28,16 @@ fn main() {
   let config = &yaml_rust::YamlLoader::load_from_str(&config_text).unwrap()[0];
 
   let mut github_api = RestClient::new(github::API_URL).unwrap();
-  let query = vec![("page", "2")];
+  
   for github_username in config["github"]["usernames"].clone() {
-    //let url = format!("{}/{}", github::API_URL, github::Activity::get_path(env::args().nth(1).unwrap()).unwrap());
-    //let url = format!("{}/users/grenade/events", github::API_URL);
-    github::get_last_page_number("https://api.github.com/users/grenade/events".to_string());
-
-    let github_activity: github::Activity = github_api.get_with(github_username.as_str().unwrap().to_string(), &query).unwrap();
-    println!("{:?}", github_activity);
+    let last_page = github::get_last_page_number(format!("{}/{}", github::API_URL, github::Activity::get_path(github_username.as_str().unwrap().to_string()).unwrap()));
+    println!("last_page: {:?}", last_page);
+    for i in 0..last_page {
+      let page = format!("{}", (i + 1));
+      println!("fetch page: {:?}", page);
+      let query = vec![("page", &page[..])];
+      let github_activity: github::Activity = github_api.get_with(github_username.as_str().unwrap().to_string(), query.as_slice()).unwrap();
+      println!("{:?}", github_activity);
+    }
   }
 }

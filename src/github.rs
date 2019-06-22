@@ -80,41 +80,27 @@ impl RestPath<String> for Activity {
   }
 }
 
-fn extract_page(input: &str) -> Option<&u32> {
-  lazy_static! {
-    static ref RE: Regex = Regex::new(r"page=([0-9]*)").unwrap();
-  }
-  RE.captures(input).and_then(|cap| {
-    cap.name("page").map(|page| page.parse::<u32>())
-  })
-}
-
 pub fn get_last_page_number(url: String) -> u32 {
   let response = reqwest::get(&url).expect("failed to send request");
+  println!("url: {}", url);
+  println!("response: {}", response.status());
   if response.status().is_success() {
-    println!("{}", response.status());
-
-
-    let last_page_link_header = response.headers().get(reqwest::header::LINK).unwrap().to_str().unwrap().split(",").last().unwrap()
+    let last_page_link_header = response.headers().get(reqwest::header::LINK).unwrap().to_str().unwrap().split(",").last().unwrap();
     let re = Regex::new(r"page=(?P<page>[0-9]*)").unwrap();
-    let cap = match re.captures(&last_page_link_header) {
+    let captures = match re.captures(&last_page_link_header) {
       Some(data) => data,
-      None => panic!("failed to match page number in link header")
+      None => panic!("failed to match page number regex in link header")
     };
-    let page = match cap.name("idno") {
-      Some(data) => Some(match data.parse::<u32>() {
+    let page = match captures.name("page") {
+      Some(data) => Some(match data.as_str().parse::<u32>() {
         Ok(data) => data,
-        Err(err) => panic!("died in u32 parse")
+        Err(_) => panic!("failed to parse page number")
       }),
       None => None
     };
-    println!("{:?}", extract_page());
-    return 1;
+    println!("{:?}", page);
+    return page.unwrap();
   } else {
     return 0;
   }
-  //for header in response.headers().iter() {
-    //println!("{}: {}", header.name(), header.value_string());
-  //  println!("{:?}", header);
-  //}
 }
