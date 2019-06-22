@@ -1,5 +1,6 @@
 use chrono::{DateTime, Utc};
 //use serde_json::{Value};
+use regex::Regex;
 use restson::{RestPath,Error};
 
 pub const API_URL: &str = "https://api.github.com";
@@ -76,5 +77,30 @@ pub struct Repo {
 impl RestPath<String> for Activity {
   fn get_path(github_username: String) -> Result<String,Error> {
     Ok(format!("users/{}/events", github_username))
+  }
+}
+
+pub fn get_last_page_number(url: String) -> u32 {
+  let response = reqwest::get(&url).expect("failed to send request");
+  println!("url: {}", url);
+  println!("response: {}", response.status());
+  if response.status().is_success() {
+    let last_page_link_header = response.headers().get(reqwest::header::LINK).unwrap().to_str().unwrap().split(",").last().unwrap();
+    let re = Regex::new(r"page=(?P<page>[0-9]*)").unwrap();
+    let captures = match re.captures(&last_page_link_header) {
+      Some(data) => data,
+      None => panic!("failed to match page number regex in link header")
+    };
+    let page = match captures.name("page") {
+      Some(data) => Some(match data.as_str().parse::<u32>() {
+        Ok(data) => data,
+        Err(_) => panic!("failed to parse page number")
+      }),
+      None => None
+    };
+    println!("{:?}", page);
+    return page.unwrap();
+  } else {
+    return 0;
   }
 }

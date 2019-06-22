@@ -5,6 +5,8 @@ authors = [ "rob thijssen <rthijssen@gmail.com>" ]
 
 [dependencies]
 chrono = { version = "^0.4", features = ["serde"] }
+regex = "^1.1"
+reqwest = "^0.9"
 restson = "^0.5"
 serde = "^1.0"
 serde_derive = "^1.0"
