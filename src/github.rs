@@ -50,12 +50,16 @@ pub struct Org {
 
 #[derive(Deserialize, Debug)]
 pub struct Payload {
+  pub action: Option<String>,
   pub descripttion: Option<String>,
   pub master_branch: Option<String>,
   #[serde(rename = "ref")]
   pub git_ref: Option<String>,
   pub ref_type: Option<String>,
   pub commits: Option<Vec<Commit>>,
+  pub comment: Option<Comment>,
+  pub forkee: Option<Fork>,
+  pub pull_request: Option<PullRequest>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -64,6 +68,34 @@ pub struct Repo {
   pub name: String,
   pub url: String,
 }
+
+#[derive(Deserialize, Debug)]
+pub struct Comment {
+  pub id: u32,
+  pub body: String,
+  pub url: String,
+  pub html_url: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Fork {
+  pub id: u32,
+  pub name: String,
+  pub full_name: String,
+  pub url: String,
+  pub html_url: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct PullRequest {
+  pub id: u32,
+  pub title: String,
+  pub state: String,
+  pub body: Option<String>,
+  pub url: String,
+  pub html_url: String,
+}
+
 
 pub fn get_last_page_number(url: String) -> u32 {
   let response = reqwest::get(&url).expect("failed to send request");
