@@ -28,9 +28,9 @@ fn main() {
   );
 
   // grab all pages of github events for each configured github username
-  for github_username in config["github"]["usernames"].clone() {
-    let latest_stored_event_index = events.iter().position(|ref x| x.id.starts_with("GitHub_") && x.user == github_username.as_str().unwrap().to_string()).unwrap();
-    let user_events = github::get_user_events(github_username.as_str().unwrap().to_string(), events[latest_stored_event_index].id.to_string());
+  for github_username in config["github"]["usernames"].as_vec().unwrap().iter().map(|ref u| u.as_str().unwrap().to_string()) {
+    let latest_stored_event_index = events.iter().position(|ref x| x.id.starts_with("GitHub_") && x.user == github_username).unwrap();
+    let user_events = github::get_user_events(github_username, events[latest_stored_event_index].id.to_string());
     for user_event in user_events {
       events.retain(|ref e| e.id != user_event.id);
       events.push(user_event);
