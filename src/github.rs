@@ -1,5 +1,6 @@
 use chrono::{DateTime, Utc};
 use regex::Regex;
+use serde_json::json;
 
 pub const API_URL: &str = "https://api.github.com";
 
@@ -111,4 +112,24 @@ pub fn get_last_page_number(url: String) -> u32 {
   } else {
     return 0;
   }
+}
+
+
+pub fn update_gist_file(gist_id: String, gist_description: String, file_name: String, file_content: String) {
+  let gh_user = std::env::var("GH_USER").unwrap().to_string();
+  let gh_pass = std::env::var("GH_PASS").unwrap().to_string();
+  let body = json!({
+    "description": gist_description,
+    "files": {
+      file_name.clone(): {
+        "content": file_content,
+        "filename": file_name
+      }
+    }
+  });
+  let response = reqwest::Client::new().patch(&format!("{}/gists/{}", API_URL, gist_id))
+    .basic_auth(gh_user.clone(), Some(gh_pass.clone()))
+    .body(body.to_string())
+    .send().unwrap();
+  println!("{}", response.status());
 }

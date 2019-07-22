@@ -64,7 +64,7 @@ fn main() {
                 url: Some(format!("https://github.com/{}/commit/{}", &github_event.repo.name, &commit.sha)),
                 text: format!("{}", &commit.sha[0..7]),
                 title: Some(format!("commit {}", &commit.sha[0..7])),
-                suffix: Some(commit.message.lines().next().unwrap().to_string()),
+                suffix: Some(format!(" {}", commit.message.lines().next().unwrap().to_string())),
               }).collect(),
               tag: entity::Tag::Icon
             }),
@@ -243,7 +243,9 @@ fn main() {
   }
   events.sort_by(|a, b| b.date.cmp(&a.date));
   let json_events = serde_json::to_string_pretty(&events).unwrap();
-  let json_events_path = format!("/home/grenade/git/gist/4882bcabb5b7d0d31e67153839998819/grenade-events.json");
-  fs::write(&json_events_path, &json_events).expect("unable to write json file");
-  println!("{} updated",  json_events_path);
+  github::update_gist_file(
+    "4882bcabb5b7d0d31e67153839998819".to_string(),
+    "things grenade did recently".to_string(),
+    "grenade-events.json".to_string(),
+    json_events) 
 }
