@@ -31,7 +31,7 @@ fn main() {
   events.sort_by(|a, b| b.date.cmp(&a.date));
   let json_events = serde_json::to_string_pretty(&events).unwrap();
   github::update_gist_file(
-    config["github"]["events_gist"].to_string(),
+    config["github"]["events_gist"].as_str().unwrap().to_string(),
     "things grenade did recently".to_string(),
     "grenade-events.json".to_string(),
     json_events);
