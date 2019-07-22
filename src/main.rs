@@ -22,17 +22,24 @@ fn main() {
   config_file.read_to_string(&mut config_text).expect("unable to read config file");
   let config = &yaml_rust::YamlLoader::load_from_str(&config_text).unwrap()[0];
 
-  let mut events: Vec<entity::Event> = Vec::new();
+  let mut events = github::get_gist_events(
+    config["github"]["events_gist"]["id"].as_str().unwrap().to_string(),
+    config["github"]["events_gist"]["filename"].as_str().unwrap().to_string()
+  );
 
   // grab all pages of github events for each configured github username
   for github_username in config["github"]["usernames"].clone() {
-    events.append(&mut github::get_user_events(github_username.as_str().unwrap().to_string()));
+    let user_events = github::get_user_events(github_username.as_str().unwrap().to_string());
+    for user_event in user_events {
+      events.retain(|ref e| e.id != user_event.id);
+      events.push(user_event);
+    }
   }
   events.sort_by(|a, b| b.date.cmp(&a.date));
   let json_events = serde_json::to_string_pretty(&events).unwrap();
   github::update_gist_file(
-    config["github"]["events_gist"].as_str().unwrap().to_string(),
-    "things grenade did recently".to_string(),
-    "grenade-events.json".to_string(),
+    config["github"]["events_gist"]["id"].as_str().unwrap().to_string(),
+    config["github"]["events_gist"]["description"].as_str().unwrap().to_string(),
+    config["github"]["events_gist"]["filename"].as_str().unwrap().to_string(),
     json_events);
 }

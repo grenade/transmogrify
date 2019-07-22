@@ -100,6 +100,33 @@ pub struct PullRequest {
 }
 
 
+pub fn get_gist_events(gist_id: String, gist_filename: String) -> Vec<entity::Event> {
+  let gh_user = env::var("GH_USER").unwrap().to_string();
+  let gh_pass = env::var("GH_PASS").unwrap().to_string();
+
+  // get latest gist revision sha
+  let mut version_response = reqwest::Client::new().get(&format!("{}/gists/{}", API_URL, &gist_id))
+    .basic_auth(gh_user.clone(), Some(gh_pass.clone()))
+    .send().unwrap();
+  println!("{}", version_response.status());
+  let history_gist: serde_json::Value = serde_json::from_str(version_response.text().unwrap().as_str()).unwrap();
+  println!("{:?}", &history_gist["history"][0]["version"]);
+
+  // get latest gist file content
+  let mut response = reqwest::Client::new().get(&format!("{}/gists/{}/{}", API_URL, gist_id, history_gist["history"][0]["version"].as_str().unwrap()))
+    .basic_auth(gh_user.clone(), Some(gh_pass.clone()))
+    .send().unwrap();
+  println!("{}", response.status());
+  let gist: serde_json::Value = serde_json::from_str(response.text().unwrap().as_str()).unwrap();
+  println!("{:?}", &gist);
+  println!("{:?}", &gist["files"]);
+  println!("{:?}", &gist["files"][&gist_filename]);
+  println!("{:?}", &gist["files"][&gist_filename]["content"]);
+  let events: Vec<entity::Event> = serde_json::from_str(&gist["files"][&gist_filename]["content"].as_str().unwrap()).unwrap();
+  return events;
+}
+
+
 pub fn get_last_page_number(url: String) -> u32 {
   let response = reqwest::get(&url).expect("failed to send request");
   if response.status().is_success() {
