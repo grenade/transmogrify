@@ -130,8 +130,8 @@ pub fn get_user_events(github_username: String) -> Vec<entity::Event> {
       println!("{:?}", &github_event);
       let e = match github_event.action.as_ref() {
         "PushEvent" => entity::Event{
-          id: github_event.id.to_string(),
-          action: format!("Github{}", &github_event.action),
+          id: format!("GitHub_{}", &github_event.id),
+          action: format!("GitHub_{}", &github_event.action),
           date: github_event.created_at,
           title: entity::Element{
             definition: None,
@@ -190,8 +190,8 @@ pub fn get_user_events(github_username: String) -> Vec<entity::Event> {
         }
         */
         "ForkEvent" => entity::Event{
-          id: github_event.id.to_string(),
-          action: format!("Github{}", &github_event.action),
+          id: format!("GitHub_{}", &github_event.id),
+          action: format!("GitHub_{}", &github_event.action),
           date: github_event.created_at,
           title: entity::Element{
             definition: None,
@@ -224,8 +224,8 @@ pub fn get_user_events(github_username: String) -> Vec<entity::Event> {
           }),
         },
         "PullRequestEvent" => entity::Event{
-          id: github_event.id.to_string(),
-          action: format!("Github{}", &github_event.action),
+          id: format!("GitHub_{}", &github_event.id),
+          action: format!("GitHub_{}", &github_event.action),
           date: github_event.created_at,
           title: entity::Element{
             definition: None,
@@ -279,8 +279,8 @@ pub fn get_user_events(github_username: String) -> Vec<entity::Event> {
         }
         */
         "IssueCommentEvent" => entity::Event{
-          id: github_event.id.to_string(),
-          action: format!("Github{}", &github_event.action),
+          id: format!("GitHub_{}", &github_event.id),
+          action: format!("GitHub_{}", &github_event.action),
           date: github_event.created_at,
           title: entity::Element{
             definition: None,
@@ -313,8 +313,8 @@ pub fn get_user_events(github_username: String) -> Vec<entity::Event> {
           }),
         },
         _ => entity::Event{
-          id: github_event.id.to_string(),
-          action: format!("Github{}", &github_event.action),
+          id: format!("GitHub_{}", &github_event.id),
+          action: format!("GitHub_{}", &github_event.action),
           date: github_event.created_at,
           title: entity::Element{
             definition: None,
