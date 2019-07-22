@@ -74,5 +74,5 @@ pub struct KeyValuePair {
 }
 
 fn empty_string() -> String {
-  "grenade".to_string()
+  "".to_string()
 }
