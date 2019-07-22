@@ -5,6 +5,9 @@ pub struct Event {
 
   pub id: String,
 
+  #[serde(default = "empty_string")]
+  pub user: String,
+
   pub action: String,
 
   pub date: DateTime<Utc>,
@@ -68,4 +71,8 @@ pub struct KeyValuePair {
 
   #[serde(skip_serializing_if="Option::is_none")]
   pub value: Option<String>,
+}
+
+fn empty_string() -> String {
+  "grenade".to_string()
 }
