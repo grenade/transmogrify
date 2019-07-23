@@ -8,3 +8,6 @@ github:
     - octocat
     - fabpot
     - andrew
+bugzilla:
+  usernames:
+    - kairo

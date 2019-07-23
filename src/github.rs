@@ -186,7 +186,7 @@ pub fn get_user_events(github_username: String, last_known_event_id: String) -> 
               title: Some(format!("commit {}", &commit.sha[0..7])),
               suffix: Some(format!(" {}", commit.message.lines().next().unwrap().to_string())),
             }).collect(),
-            tag: entity::Tag::Icon
+            tag: entity::Tag::UnorderedList
           }),
         },
         /*
