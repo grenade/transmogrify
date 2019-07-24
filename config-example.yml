@@ -3,6 +3,7 @@ github:
   events_gist:
     id: 5379aebda12246d98584abbd7fbf8cf7
     filename: events.json
+    username: someone
     description: things someone did recently
   usernames:
     - octocat

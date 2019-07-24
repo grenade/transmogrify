@@ -71,63 +71,60 @@ pub struct BugChange {
 
 pub fn get_user_events(username: String) -> Vec<entity::Event> {
   let mut events: Vec<entity::Event> = Vec::new();
-  for qualifier in vec!["reporter", "assigned_to"] {
-    let mut bug_list_response = reqwest::Client::new().get(&format!("{}/bug?{}={}", API_URL, qualifier, username)).send().unwrap();
-    println!("{}", bug_list_response.status());
-    let bug_list: BugListResponse = serde_json::from_str(bug_list_response.text().unwrap().as_str()).unwrap();
-    for bug in bug_list.bugs {
-      // todo: check if last_change_time exists in stored events already
-      let mut bug_history_response = reqwest::Client::new().get(&format!("{}/bug/{}/history", API_URL, &bug.id)).send().unwrap();
-      println!("{}", bug_history_response.status());
-      let bug_history: BugHistoryResponse = serde_json::from_str(bug_history_response.text().unwrap().as_str()).unwrap();
+  let mut bug_list_response = reqwest::Client::new().get(&format!("{}/bug?cc={}", API_URL, username)).send().unwrap();
+  println!("{}", bug_list_response.status());
+  let bug_list: BugListResponse = serde_json::from_str(bug_list_response.text().unwrap().as_str()).unwrap();
+  for bug in bug_list.bugs {
+    // todo: check if last_change_time exists in stored events already
+    let mut bug_history_response = reqwest::Client::new().get(&format!("{}/bug/{}/history", API_URL, &bug.id)).send().unwrap();
+    println!("{}", bug_history_response.status());
+    let bug_history: BugHistoryResponse = serde_json::from_str(bug_history_response.text().unwrap().as_str()).unwrap();
 
-      let mut history_index = 0;
-      for history in bug_history.bugs[0].history.iter().filter(|ref h| h.who.starts_with(username.as_str())) {
-        let event = entity::Event{
-          id: format!("Bugzilla_{}_{}", &bug.id, &history_index),
-          user: format!("{}", &username),
-          action: format!("Bugzilla_BugChange"),
-          date: history.when,
-          title: entity::Element{
-            definition: None,
-            prefix: None,
-            url: Some(format!("https://bugzilla.mozilla.org/show_bug.cgi?id={}", &bug.id)),
-            text: format!("Bug {}", &bug.id),
-            title: None,
-            suffix: Some(format!(" {}", &bug.summary)),
-          },
-          subtitle: None,
-          body: Some(entity::Body {
-            content: history.changes.iter().map(|ref bug_change| 
-              match bug_change.field_name.as_ref() {
-                "blocks" | "depends_on" => entity::Element {
-                  definition: None,
-                  prefix: Some(format!("{} {} bug ", (match bug_change.removed.as_ref() { "" => "added", _ => "removed" }), (match bug_change.field_name.as_ref() { "blocks" => "blocking of", _ => "dependency on" }))),
-                  url: Some(format!("https://bugzilla.mozilla.org/show_bug.cgi?id={}", &bug_change.added)),
-                  text: format!("{}", &bug_change.added),
-                  title: Some(format!("{}", &bug.id)),
-                  suffix: None,
-                },
-                /*"cc" | "whiteboard" | "resolution" | "status"*/
-                _ => entity::Element {
-                  definition: None,
-                  prefix: None,
-                  url: None,
-                  text: format!("{} {}: '{}' => '{}'", (match bug_change.removed.as_ref() { "" => "added", _ => match bug_change.added.as_ref() { "" => "removed", _ => "changed" } }), &bug_change.field_name, &bug_change.removed, &bug_change.added),
-                  title: None,
-                  suffix: None,
-                }
+    let mut history_index = 0;
+    for history in bug_history.bugs[0].history.iter().filter(|ref h| h.who.starts_with(username.as_str())) {
+      let event = entity::Event{
+        id: format!("Bugzilla_{}_{}", &bug.id, &history_index),
+        user: format!("{}", &username),
+        action: format!("Bugzilla_BugChange"),
+        date: history.when,
+        title: entity::Element{
+          definition: None,
+          prefix: None,
+          url: Some(format!("https://bugzilla.mozilla.org/show_bug.cgi?id={}", &bug.id)),
+          text: format!("Bug {}", &bug.id),
+          title: None,
+          suffix: Some(format!(" {}", &bug.summary)),
+        },
+        subtitle: None,
+        body: Some(entity::Body {
+          content: history.changes.iter().map(|ref bug_change| 
+            match bug_change.field_name.as_ref() {
+              "blocks" | "depends_on" => entity::Element {
+                definition: None,
+                prefix: Some(format!("{} {} bug ", (match bug_change.removed.as_ref() { "" => "added", _ => "removed" }), (match bug_change.field_name.as_ref() { "blocks" => "blocking of", _ => "dependency on" }))),
+                url: Some(format!("https://bugzilla.mozilla.org/show_bug.cgi?id={}", &bug_change.added)),
+                text: format!("{}", &bug_change.added),
+                title: Some(format!("{}", &bug.id)),
+                suffix: None,
+              },
+              /*"cc" | "whiteboard" | "resolution" | "status"*/
+              _ => entity::Element {
+                definition: None,
+                prefix: None,
+                url: None,
+                text: format!("{} {}: '{}' => '{}'", (match bug_change.removed.as_ref() { "" => "added", _ => match bug_change.added.as_ref() { "" => "removed", _ => "changed" } }), &bug_change.field_name, &bug_change.removed, &bug_change.added),
+                title: None,
+                suffix: None,
               }
-            ).collect(),
-            tag: entity::Tag::UnorderedList,
-          }),
-        };
-        println!("{:?}", &event);
-        events.push(event);
-        history_index += 1;
-      }
+            }
+          ).collect(),
+          tag: entity::Tag::UnorderedList,
+        }),
+      };
+      println!("{:?}", &event);
+      events.push(event);
+      history_index += 1;
     }
-    //println!("{:?}", &container.bugs);
   }
   return events;
 }
