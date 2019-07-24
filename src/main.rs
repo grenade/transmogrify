@@ -16,7 +16,7 @@ mod github;
 mod bugzilla;
 
 // debug usage:
-// RUST_BACKTRACE=1 cargo run
+// GH_USER=grenade GH_PASS=$(pass github/grenade/token/memento-user-read) RUST_BACKTRACE=1 cargo run
 fn main() {
   let mut config_file = fs::File::open("config.yml").expect("unable to open config file");
   let mut config_text = String::new();

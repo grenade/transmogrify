@@ -57,6 +57,7 @@ pub enum Tag {
   Paragraph,
   Paragraphs,
   UnorderedList,
+  Markdown,
 }
 
 #[derive(Debug, Deserialize, Serialize)]

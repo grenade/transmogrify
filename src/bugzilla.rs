@@ -76,10 +76,12 @@ pub fn get_user_events(username: String) -> Vec<entity::Event> {
   let bug_list: BugListResponse = serde_json::from_str(bug_list_response.text().unwrap().as_str()).unwrap();
   for bug in bug_list.bugs {
     // todo: check if last_change_time exists in stored events already
-    let mut bug_history_response = reqwest::Client::new().get(&format!("{}/bug/{}/history", API_URL, &bug.id)).send().unwrap();
-    println!("{}", bug_history_response.status());
-    let bug_history: BugHistoryResponse = serde_json::from_str(bug_history_response.text().unwrap().as_str()).unwrap();
 
+    // get bug changes
+    let bug_history_url = format!("{}/bug/{}/history", API_URL, &bug.id);
+    let mut bug_history_response = reqwest::Client::new().get(&bug_history_url).send().unwrap();
+    println!("{} ({})", bug_history_response.status(), &bug_history_url);
+    let bug_history: BugHistoryResponse = serde_json::from_str(bug_history_response.text().unwrap().as_str()).unwrap();
     let mut history_index = 0;
     for history in bug_history.bugs[0].history.iter().filter(|ref h| h.who.starts_with(username.as_str())) {
       let event = entity::Event{
@@ -124,6 +126,45 @@ pub fn get_user_events(username: String) -> Vec<entity::Event> {
       println!("{:?}", &event);
       events.push(event);
       history_index += 1;
+    }
+
+    // get bug comments
+    let bug_comment_url = format!("{}/bug/{}/comment", API_URL, &bug.id);
+    let mut bug_comment_response = reqwest::Client::new().get(&bug_comment_url).send().unwrap();
+    println!("{} ({})", bug_comment_response.status(), &bug_comment_url);
+    let bug_comment_response_body: serde_json::Value = serde_json::from_str(bug_comment_response.text().unwrap().as_str()).unwrap();
+    for comment in bug_comment_response_body["bugs"][&bug.id.to_string()]["comments"].as_array().unwrap().iter().filter(|ref c| c["author"].as_str().unwrap().starts_with(username.as_str()))  {
+      //println!("{:?}", comment);
+      let event = entity::Event{
+        id: format!("Bugzilla_{}_c{}", &bug.id, &comment["count"].as_u64().unwrap()),
+        user: format!("{}", &username),
+        action: format!("Bugzilla_BugComment"),
+        date: DateTime::parse_from_rfc3339(&comment["creation_time"].as_str().unwrap()).unwrap().with_timezone(&Utc),
+        title: entity::Element{
+          definition: None,
+          prefix: None,
+          url: Some(format!("https://bugzilla.mozilla.org/show_bug.cgi?id={}#c{}", &bug.id, &comment["count"].as_u64().unwrap())),
+          text: format!("Bug {} comment {}", &bug.id, &comment["count"].as_u64().unwrap()),
+          title: None,
+          suffix: Some(format!(" {}", &bug.summary)),
+        },
+        subtitle: None,
+        body: Some(entity::Body{
+          content: vec![
+            entity::Element{
+              definition: None,
+              prefix: None,
+              url: None,
+              text: comment["text"].as_str().unwrap().to_string(),
+              title: None,
+              suffix: None,
+            },
+          ],
+          tag: entity::Tag::Markdown
+        }),
+      };
+      println!("{:?}", &event);
+      events.push(event);
     }
   }
   return events;
