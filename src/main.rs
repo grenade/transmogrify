@@ -26,6 +26,7 @@ fn main() {
   // fetch previously stashed events from github gist
   let mut events = github::get_gist_events(
     config["github"]["events_gist"]["id"].as_str().unwrap().to_string(),
+    config["github"]["events_gist"]["username"].as_str().unwrap().to_string(),
     config["github"]["events_gist"]["filename"].as_str().unwrap().to_string()
   );
   /*

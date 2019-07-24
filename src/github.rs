@@ -100,29 +100,35 @@ pub struct PullRequest {
 }
 
 
-pub fn get_gist_events(gist_id: String, gist_filename: String) -> Vec<entity::Event> {
+pub fn get_gist_events(gist_id: String, gist_username: String, gist_filename: String) -> Vec<entity::Event> {
   let gh_user = env::var("GH_USER").unwrap().to_string();
   let gh_pass = env::var("GH_PASS").unwrap().to_string();
 
   // get latest gist revision sha
-  let mut version_response = reqwest::Client::new().get(&format!("{}/gists/{}", API_URL, &gist_id))
+  let version_url = format!("{}/gists/{}", API_URL, &gist_id);
+  let mut version_response = reqwest::Client::new().get(&version_url)
     .basic_auth(gh_user.clone(), Some(gh_pass.clone()))
     .send().unwrap();
-  println!("{}", version_response.status());
+  println!("{} ({})", version_response.status(), &version_url);
   let history_gist: serde_json::Value = serde_json::from_str(version_response.text().unwrap().as_str()).unwrap();
-  println!("{:?}", &history_gist["history"][0]["version"]);
+  let latest_gist_sha = history_gist["history"][0]["version"].as_str().unwrap();
+  println!("gist: {}, latest sha: {}", &gist_id, &latest_gist_sha);
 
   // get latest gist file content
-  let mut response = reqwest::Client::new().get(&format!("{}/gists/{}/{}", API_URL, gist_id, history_gist["history"][0]["version"].as_str().unwrap()))
+  /*
+  let url = format!("{}/gists/{}/{}", API_URL, &gist_id, &latest_gist_sha);
+  let mut response = reqwest::Client::new().get(&url)
     .basic_auth(gh_user.clone(), Some(gh_pass.clone()))
     .send().unwrap();
-  println!("{}", response.status());
+  println!("{} ({})", response.status(), &url);
   let gist: serde_json::Value = serde_json::from_str(response.text().unwrap().as_str()).unwrap();
-  println!("{:?}", &gist);
-  println!("{:?}", &gist["files"]);
-  println!("{:?}", &gist["files"][&gist_filename]);
-  println!("{:?}", &gist["files"][&gist_filename]["content"]);
   let events: Vec<entity::Event> = serde_json::from_str(&gist["files"][&gist_filename]["content"].as_str().unwrap()).unwrap();
+  */
+  let url = format!("https://gist.githubusercontent.com/{}/{}/raw/{}/{}", &gist_username, &gist_id, &latest_gist_sha, &gist_filename);
+  let mut response = reqwest::Client::new().get(&url).send().unwrap();
+  println!("{} ({})", response.status(), &url);
+  let events: Vec<entity::Event> = serde_json::from_str(response.text().unwrap().as_str()).unwrap();
+  println!("file: {}, event count: {}", &gist_filename, &events.len());
   return events;
 }
 
